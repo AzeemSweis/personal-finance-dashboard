@@ -4,8 +4,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import (accounts_router, auth_router, balances_router,
-                  portfolios_router, transactions_router, users_router)
+from .api import (
+    accounts_router,
+    auth_router,
+    balances_router,
+    portfolios_router,
+    transactions_router,
+    users_router,
+)
 from .database import close_db, init_db
 
 # Configure logging
