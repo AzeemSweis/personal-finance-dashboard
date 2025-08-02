@@ -5,17 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from ..auth.jwt import get_current_active_user
 from ..database import get_db
 from ..models.account import Account
 from ..models.balance_snapshot import BalanceSnapshot
 from ..models.user import User
-from ..schemas.balance import (
-    AccountBalance,
-    BalanceOverviewResponse,
-    BalanceSnapshotResponse,
-)
+from ..schemas.balance import (AccountBalance, BalanceOverviewResponse,
+                               BalanceSnapshotResponse)
 
 router = APIRouter(prefix="/balances", tags=["balances"])
 

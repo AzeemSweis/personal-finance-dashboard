@@ -9,14 +9,9 @@ from ..database import get_db
 from ..models.investment import Investment
 from ..models.portfolio import Portfolio, PortfolioItem
 from ..models.user import User
-from ..schemas.portfolio import (
-    PortfolioCreate,
-    PortfolioItemCreate,
-    PortfolioItemResponse,
-    PortfolioItemUpdate,
-    PortfolioResponse,
-    PortfolioUpdate,
-)
+from ..schemas.portfolio import (PortfolioCreate, PortfolioItemCreate,
+                                 PortfolioItemResponse, PortfolioItemUpdate,
+                                 PortfolioResponse, PortfolioUpdate)
 
 router = APIRouter(prefix="/portfolios", tags=["portfolios"])
 
