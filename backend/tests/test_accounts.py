@@ -1,6 +1,7 @@
 import pytest
 from fastapi import status
 from sqlalchemy import select
+
 from app.models.account import Account
 
 
@@ -10,10 +11,10 @@ class TestAccountsEndpoints:
     def test_get_accounts_empty(self, authenticated_client):
         """Test getting accounts when user has no accounts."""
         client, user = authenticated_client
-        
+
         response = client.get("/accounts")
         assert response.status_code == status.HTTP_200_OK
-        
+
         data = response.json()
         assert isinstance(data, list)
         assert len(data) == 0
@@ -21,10 +22,10 @@ class TestAccountsEndpoints:
     def test_create_account_success(self, authenticated_client, sample_account_data):
         """Test successful account creation."""
         client, user = authenticated_client
-        
+
         response = client.post("/accounts", json=sample_account_data)
         assert response.status_code == status.HTTP_201_CREATED
-        
+
         data = response.json()
         assert data["name"] == sample_account_data["name"]
         assert data["type"] == sample_account_data["type"]
@@ -42,41 +43,45 @@ class TestAccountsEndpoints:
     def test_create_account_missing_required_fields(self, authenticated_client):
         """Test account creation with missing required fields."""
         client, user = authenticated_client
-        
+
         incomplete_data = {
             "name": "Test Account"
             # Missing type and current_balance
         }
-        
+
         response = client.post("/accounts", json=incomplete_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_create_account_invalid_type(self, authenticated_client, sample_account_data):
+    def test_create_account_invalid_type(
+        self, authenticated_client, sample_account_data
+    ):
         """Test account creation with invalid account type."""
         client, user = authenticated_client
-        
+
         invalid_data = sample_account_data.copy()
         invalid_data["type"] = "invalid_type"
-        
+
         response = client.post("/accounts", json=invalid_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_get_accounts_with_data(self, authenticated_client, sample_account_data, db_session):
+    def test_get_accounts_with_data(
+        self, authenticated_client, sample_account_data, db_session
+    ):
         """Test getting accounts when user has accounts."""
         client, user = authenticated_client
-        
+
         # Create an account
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
-        
+
         # Get all accounts
         response = client.get("/accounts")
         assert response.status_code == status.HTTP_200_OK
-        
+
         data = response.json()
         assert isinstance(data, list)
         assert len(data) == 1
-        
+
         account = data[0]
         assert account["name"] == sample_account_data["name"]
         assert account["type"] == sample_account_data["type"]
@@ -85,16 +90,16 @@ class TestAccountsEndpoints:
     def test_get_account_by_id_success(self, authenticated_client, sample_account_data):
         """Test getting a specific account by ID."""
         client, user = authenticated_client
-        
+
         # Create an account
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
         account_id = create_response.json()["id"]
-        
+
         # Get the account
         response = client.get(f"/accounts/{account_id}")
         assert response.status_code == status.HTTP_200_OK
-        
+
         data = response.json()
         assert data["id"] == account_id
         assert data["name"] == sample_account_data["name"]
@@ -102,7 +107,7 @@ class TestAccountsEndpoints:
     def test_get_account_by_id_not_found(self, authenticated_client):
         """Test getting a non-existent account."""
         client, user = authenticated_client
-        
+
         response = client.get("/accounts/999")
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "Account not found" in response.json()["detail"]
@@ -112,61 +117,62 @@ class TestAccountsEndpoints:
         response = client.get("/accounts/1")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_account_by_id_wrong_user(self, authenticated_client, sample_account_data, db_session):
+    def test_get_account_by_id_wrong_user(
+        self, authenticated_client, sample_account_data, db_session
+    ):
         """Test getting an account that belongs to another user."""
         client, user = authenticated_client
-        
+
         # Create an account for the current user
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
         account_id = create_response.json()["id"]
-        
+
         # Create another user and try to access the account
-        from app.models.user import User
         from app.auth.password import get_password_hash
-        
+        from app.models.user import User
+
         other_user = User(
             email="other@example.com",
             username="otheruser",
             hashed_password=get_password_hash("password123"),
             is_active=True,
-            is_verified=True
+            is_verified=True,
         )
-        
+
         async def create_other_user():
             db_session.add(other_user)
             await db_session.commit()
             await db_session.refresh(other_user)
-        
+
         import asyncio
+
         asyncio.run(create_other_user())
-        
+
         # Try to access the account with the other user's token
         from app.auth import create_access_token
+
         other_token = create_access_token(data={"sub": other_user.email})
         client.headers.update({"Authorization": f"Bearer {other_token}"})
-        
+
         response = client.get(f"/accounts/{account_id}")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_update_account_success(self, authenticated_client, sample_account_data):
         """Test successful account update."""
         client, user = authenticated_client
-        
+
         # Create an account
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
         account_id = create_response.json()["id"]
-        
+
         # Update the account
-        update_data = {
-            "name": "Updated Account Name",
-            "current_balance": 7500.00
-        }
-        
+        update_data = {"name": "Updated Account Name", "current_balance": 7500.00}
+
         response = client.put(f"/accounts/{account_id}", json=update_data)
         assert response.status_code == status.HTTP_200_OK
-        
+
         data = response.json()
         assert data["name"] == update_data["name"]
         assert data["current_balance"] == update_data["current_balance"]
@@ -177,20 +183,22 @@ class TestAccountsEndpoints:
     def test_update_account_not_found(self, authenticated_client):
         """Test updating a non-existent account."""
         client, user = authenticated_client
-        
+
         update_data = {"name": "Updated Name"}
         response = client.put("/accounts/999", json=update_data)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_update_account_invalid_data(self, authenticated_client, sample_account_data):
+    def test_update_account_invalid_data(
+        self, authenticated_client, sample_account_data
+    ):
         """Test updating account with invalid data."""
         client, user = authenticated_client
-        
+
         # Create an account
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
         account_id = create_response.json()["id"]
-        
+
         # Try to update with invalid type
         update_data = {"type": "invalid_type"}
         response = client.put(f"/accounts/{account_id}", json=update_data)
@@ -199,16 +207,16 @@ class TestAccountsEndpoints:
     def test_delete_account_success(self, authenticated_client, sample_account_data):
         """Test successful account deletion (soft delete)."""
         client, user = authenticated_client
-        
+
         # Create an account
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
         account_id = create_response.json()["id"]
-        
+
         # Delete the account
         response = client.delete(f"/accounts/{account_id}")
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        
+
         # Verify the account is soft deleted (archived)
         get_response = client.get(f"/accounts/{account_id}")
         assert get_response.status_code == status.HTTP_200_OK
@@ -218,25 +226,27 @@ class TestAccountsEndpoints:
     def test_delete_account_not_found(self, authenticated_client):
         """Test deleting a non-existent account."""
         client, user = authenticated_client
-        
+
         response = client.delete("/accounts/999")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_get_accounts_excludes_archived(self, authenticated_client, sample_account_data):
+    def test_get_accounts_excludes_archived(
+        self, authenticated_client, sample_account_data
+    ):
         """Test that archived accounts are excluded from the list."""
         client, user = authenticated_client
-        
+
         # Create an account
         create_response = client.post("/accounts", json=sample_account_data)
         assert create_response.status_code == status.HTTP_201_CREATED
         account_id = create_response.json()["id"]
-        
+
         # Archive the account
         client.delete(f"/accounts/{account_id}")
-        
+
         # Get accounts list
         response = client.get("/accounts")
         assert response.status_code == status.HTTP_200_OK
-        
+
         data = response.json()
-        assert len(data) == 0  # Archived account should not appear in list 
+        assert len(data) == 0  # Archived account should not appear in list

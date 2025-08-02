@@ -1,15 +1,16 @@
-import pytest
 import asyncio
 from typing import AsyncGenerator, Generator
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
-from app.database import get_db
-from app.models import Base
 from app.auth import create_access_token
+from app.database import get_db
+from app.main import app
+from app.models import Base
 
 # Test database URL - use in-memory SQLite for testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -57,6 +58,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 def client(db_session: AsyncSession) -> Generator:
     """Create a test client with database session."""
+
     def override_get_db():
         yield db_session
 
@@ -74,7 +76,7 @@ def test_user():
         "username": "testuser",
         "password": "testpassword123",
         "first_name": "Test",
-        "last_name": "User"
+        "last_name": "User",
     }
 
 
@@ -89,9 +91,9 @@ def auth_headers(test_user):
 async def authenticated_client(client, test_user, db_session):
     """Create a test client with an authenticated user."""
     # First, create the user in the database
-    from app.models.user import User
     from app.auth.password import get_password_hash
-    
+    from app.models.user import User
+
     hashed_password = get_password_hash(test_user["password"])
     db_user = User(
         email=test_user["email"],
@@ -100,17 +102,17 @@ async def authenticated_client(client, test_user, db_session):
         first_name=test_user["first_name"],
         last_name=test_user["last_name"],
         is_active=True,
-        is_verified=True
+        is_verified=True,
     )
-    
+
     db_session.add(db_user)
     await db_session.commit()
     await db_session.refresh(db_user)
-    
+
     # Create auth headers
     token = create_access_token(data={"sub": test_user["email"]})
     client.headers.update({"Authorization": f"Bearer {token}"})
-    
+
     return client, db_user
 
 
@@ -123,7 +125,7 @@ def sample_account_data():
         "institution_name": "Test Bank",
         "current_balance": 5000.00,
         "available_balance": 4800.00,
-        "currency": "USD"
+        "currency": "USD",
     }
 
 
@@ -140,7 +142,7 @@ def sample_transaction_data():
         "category": "food_and_drink",
         "subcategory": "groceries",
         "is_pending": False,
-        "is_recurring": False
+        "is_recurring": False,
     }
 
 
@@ -151,5 +153,5 @@ def sample_portfolio_data():
         "name": "Test Portfolio",
         "description": "A test investment portfolio",
         "currency": "USD",
-        "is_default": True
-    } 
+        "is_default": True,
+    }

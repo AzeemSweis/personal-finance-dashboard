@@ -1,11 +1,11 @@
-from .base import Base
-from .user import User
 from .account import Account, AccountType
-from .transaction import Transaction, TransactionCategory
-from .portfolio import Portfolio, PortfolioItem
-from .investment import Investment, InvestmentType
 from .balance_snapshot import BalanceSnapshot
+from .base import Base
+from .investment import Investment, InvestmentType
 from .plaid_connection import PlaidConnection
+from .portfolio import Portfolio, PortfolioItem
+from .transaction import Transaction, TransactionCategory
+from .user import User
 
 __all__ = [
     "Base",
@@ -20,4 +20,4 @@ __all__ = [
     "InvestmentType",
     "BalanceSnapshot",
     "PlaidConnection",
-] 
+]

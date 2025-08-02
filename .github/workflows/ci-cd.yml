@@ -99,7 +99,6 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
 
     - name: Install dependencies
       run: |
@@ -217,7 +216,7 @@ jobs:
       with:
         context: ./frontend
         file: ./frontend/Dockerfile
-        target: production
+        target: runner
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ steps.meta.outputs.version }}
         labels: ${{ steps.meta.outputs.labels }}

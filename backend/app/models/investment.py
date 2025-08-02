@@ -1,11 +1,15 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum, Date, Text
-from sqlalchemy.orm import relationship
-from .base import Base
 import enum
+
+from sqlalchemy import (Boolean, Column, Date, Enum, Float, ForeignKey,
+                        Integer, String, Text)
+from sqlalchemy.orm import relationship
+
+from .base import Base
 
 
 class InvestmentType(enum.Enum):
     """Enumeration for investment types"""
+
     STOCK = "stock"
     BOND = "bond"
     ETF = "etf"
@@ -20,8 +24,9 @@ class InvestmentType(enum.Enum):
 
 class Investment(Base):
     """Investment model for tracking individual investment securities"""
+
     __tablename__ = "investments"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String(20), nullable=False, index=True)
     name = Column(String(255), nullable=False)
@@ -38,10 +43,12 @@ class Investment(Base):
     industry = Column(String(100), nullable=True)
     country = Column(String(100), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    meta_data = Column(Text, nullable=True)  # JSON string for additional investment data
-    
+    meta_data = Column(
+        Text, nullable=True
+    )  # JSON string for additional investment data
+
     # Relationships
     portfolio_items = relationship("PortfolioItem", back_populates="investment")
-    
+
     def __repr__(self):
-        return f"<Investment(id={self.id}, symbol='{self.symbol}', name='{self.name}', type={self.type.value})>" 
+        return f"<Investment(id={self.id}, symbol='{self.symbol}', name='{self.name}', type={self.type.value})>"

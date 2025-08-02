@@ -1,13 +1,15 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 import os
 from typing import AsyncGenerator
 
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
 # Database URL from environment variable
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+asyncpg://finance_user:finance_password@localhost:5432/finance_db"
+    "DATABASE_URL",
+    "postgresql+asyncpg://finance_user:finance_password@localhost:5432/finance_db",
 )
 
 # Create async engine
@@ -40,11 +42,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def init_db():
     """Initialize database tables"""
     from .models import Base
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def close_db():
     """Close database connections"""
-    await engine.dispose() 
+    await engine.dispose()

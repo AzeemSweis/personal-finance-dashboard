@@ -1,6 +1,7 @@
+from datetime import date, datetime
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
-from datetime import datetime, date
 
 
 class BalanceSnapshotResponse(BaseModel):
@@ -11,7 +12,7 @@ class BalanceSnapshotResponse(BaseModel):
     available_balance: Optional[float]
     currency: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -34,6 +35,6 @@ class BalanceOverviewResponse(BaseModel):
     accounts: List[AccountBalance]
     net_worth_trend: List[Dict[str, float]]  # List of {date: balance} objects
     last_updated: datetime
-    
+
     class Config:
-        from_attributes = True 
+        from_attributes = True

@@ -1,11 +1,16 @@
-from pydantic import BaseModel, Field
+from datetime import date, datetime
 from typing import Optional
-from datetime import datetime, date
+
+from pydantic import BaseModel, Field
+
 from ..models.transaction import TransactionCategory
 
 
 class TransactionBase(BaseModel):
-    amount: float = Field(..., description="Transaction amount (positive for income, negative for expenses)")
+    amount: float = Field(
+        ...,
+        description="Transaction amount (positive for income, negative for expenses)",
+    )
     currency: str = Field(default="USD", max_length=3)
     date: date
     description: str = Field(..., max_length=500)
@@ -46,6 +51,6 @@ class TransactionResponse(TransactionBase):
     meta_data: Optional[str]
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
-        from_attributes = True 
+        from_attributes = True

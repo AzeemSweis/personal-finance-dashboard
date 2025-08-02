@@ -11,4 +11,4 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     """Generate password hash"""
-    return pwd_context.hash(password) 
+    return pwd_context.hash(password)
