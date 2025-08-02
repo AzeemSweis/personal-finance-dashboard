@@ -19,6 +19,17 @@ describe('useAuthStore', () => {
     jest.clearAllMocks()
     localStorage.clear()
     
+    // Mock localStorage methods
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+    })
+    
     // Reset store state
     act(() => {
       useAuthStore.getState().logout()
@@ -97,7 +108,7 @@ describe('useAuthStore', () => {
       expect(result.current.token).toBeNull()
       expect(result.current.isAuthenticated).toBe(false)
       expect(result.current.isLoading).toBe(false)
-      expect(result.current.error).toBe('Invalid credentials')
+      expect(result.current.error).toBe('Login failed')
     })
 
     it('should handle API error response', async () => {

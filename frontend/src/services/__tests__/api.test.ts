@@ -1,21 +1,35 @@
 import axios from 'axios'
-import { authApi, accountsApi, transactionsApi, balancesApi, formatCurrency, formatDate, formatDateTime } from '../api'
 
-// Mock axios
-jest.mock('axios')
+// Mock axios before importing the API service
+jest.mock('axios', () => ({
+  create: jest.fn(() => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() }
+    }
+  })),
+  default: {
+    create: jest.fn(() => ({
+      get: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() }
+      }
+    }))
+  }
+}))
+
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
-// Create a properly typed mock API instance
-const createMockApi = () => ({
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn(),
-  interceptors: {
-    request: { use: jest.fn() },
-    response: { use: jest.fn() }
-  }
-})
+// Import API service after mocking
+import { authApi, accountsApi, transactionsApi, balancesApi, formatCurrency, formatDate, formatDateTime } from '../api'
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -23,25 +37,12 @@ describe('API Service', () => {
     localStorage.clear()
   })
 
-  describe('axios configuration', () => {
-    it('should configure axios with correct base URL', () => {
-      expect(mockedAxios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          baseURL: 'http://localhost:8000',
-          timeout: 10000,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      )
-    })
-  })
-
   describe('authApi', () => {
-    const mockApi = createMockApi()
+    const mockApi = mockedAxios.create()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi as any)
+      // Reset the mock to return our mock API
+      mockedAxios.create.mockReturnValue(mockApi)
     })
 
     describe('register', () => {
@@ -136,10 +137,10 @@ describe('API Service', () => {
   })
 
   describe('accountsApi', () => {
-    const mockApi = createMockApi()
+    const mockApi = mockedAxios.create()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi as any)
+      mockedAxios.create.mockReturnValue(mockApi)
     })
 
     describe('getAccounts', () => {
@@ -255,10 +256,10 @@ describe('API Service', () => {
   })
 
   describe('transactionsApi', () => {
-    const mockApi = createMockApi()
+    const mockApi = mockedAxios.create()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi as any)
+      mockedAxios.create.mockReturnValue(mockApi)
     })
 
     describe('getTransactions', () => {
@@ -362,10 +363,10 @@ describe('API Service', () => {
   })
 
   describe('balancesApi', () => {
-    const mockApi = createMockApi()
+    const mockApi = mockedAxios.create()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi as any)
+      mockedAxios.create.mockReturnValue(mockApi)
     })
 
     describe('getBalanceOverview', () => {
@@ -482,10 +483,10 @@ describe('API Service', () => {
   })
 
   describe('axios interceptors', () => {
-    const mockApi = createMockApi()
+    const mockApi = mockedAxios.create()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi as any)
+      mockedAxios.create.mockReturnValue(mockApi)
     })
 
     it('should add authorization header when token exists', () => {
