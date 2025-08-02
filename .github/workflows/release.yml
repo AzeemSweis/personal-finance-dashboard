@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and Push Release Images
+  build-release:
+    name: Build Release Images
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=ref,event=branch
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        target: production
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ steps.meta.outputs.version }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push Frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        target: production
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ steps.meta.outputs.version }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Create Release
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build-release
+    
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate changelog
+      id: changelog
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: commits } = await github.rest.repos.compareCommits({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            base: 'main',
+            head: context.sha
+          });
+          
+          const changelog = commits.commits
+            .map(commit => `- ${commit.commit.message}`)
+            .join('\n');
+          
+          return changelog;
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref_name }}
+        body: |
+          ## 🚀 Release ${{ github.ref_name }}
+          
+          ### 📋 Changes
+          ${{ steps.changelog.outputs.result }}
+          
+          ### 🐳 Docker Images
+          - Backend: `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.ref_name }}`
+          - Frontend: `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.ref_name }}`
+          
+          ### 📦 Installation
+          ```bash
+          # Pull the latest images
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.ref_name }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.ref_name }}
+          
+          # Or use docker-compose
+          docker-compose -f docker-compose.prod.yml up -d
+          ```
+          
+          ### 🔧 Environment Variables
+          Make sure to update your environment variables for this release.
+          See `env.example` for the required configuration.
+          
+          ### 📚 Documentation
+          - [Docker Setup Guide](docs/docker_setup_guide.md)
+          - [API Documentation](http://localhost:8000/docs)
+          
+          ### 🐛 Bug Reports
+          If you encounter any issues, please [create an issue](https://github.com/${{ github.repository }}/issues/new).
+        draft: false
+        prerelease: false
+
+  # Deploy Release
+  deploy-release:
+    name: Deploy Release
+    runs-on: ubuntu-latest
+    needs: create-release
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to production
+      run: |
+        echo "Deploying release ${{ github.ref_name }} to production..."
+        # Add your production deployment logic here
+        # Example: kubectl apply, docker-compose, or cloud deployment
+        
+        echo "✅ Release ${{ github.ref_name }} deployed successfully!"
+
+    - name: Notify deployment
+      run: |
+        echo "🎉 Release ${{ github.ref_name }} has been deployed to production!"
+        # Add your notification logic here (Slack, email, etc.)
+
+  # Post-release cleanup
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [create-release, deploy-release]
+    if: always()
+
+    steps:
+    - name: Cleanup old images
+      run: |
+        echo "Cleaning up old Docker images..."
+        # Add cleanup logic here if needed
+        
+    - name: Update documentation
+      run: |
+        echo "Updating release documentation..."
+        # Add documentation update logic here 
