@@ -1,28 +1,21 @@
 import axios from 'axios'
 
 // Mock axios before importing the API service
+const mockApi = {
+  get: jest.fn() as jest.MockedFunction<any>,
+  post: jest.fn() as jest.MockedFunction<any>,
+  put: jest.fn() as jest.MockedFunction<any>,
+  delete: jest.fn() as jest.MockedFunction<any>,
+  interceptors: {
+    request: { use: jest.fn() as jest.MockedFunction<any> },
+    response: { use: jest.fn() as jest.MockedFunction<any> }
+  }
+}
+
 jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() }
-    }
-  })),
+  create: jest.fn(() => mockApi),
   default: {
-    create: jest.fn(() => ({
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    }))
+    create: jest.fn(() => mockApi)
   }
 }))
 
@@ -38,11 +31,9 @@ describe('API Service', () => {
   })
 
   describe('authApi', () => {
-    const mockApi = mockedAxios.create()
-
     beforeEach(() => {
-      // Reset the mock to return our mock API
-      mockedAxios.create.mockReturnValue(mockApi)
+      // Clear all mocks before each test
+      jest.clearAllMocks()
     })
 
     describe('register', () => {
@@ -137,10 +128,8 @@ describe('API Service', () => {
   })
 
   describe('accountsApi', () => {
-    const mockApi = mockedAxios.create()
-
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      jest.clearAllMocks()
     })
 
     describe('getAccounts', () => {
@@ -256,10 +245,8 @@ describe('API Service', () => {
   })
 
   describe('transactionsApi', () => {
-    const mockApi = mockedAxios.create()
-
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      jest.clearAllMocks()
     })
 
     describe('getTransactions', () => {
@@ -363,10 +350,8 @@ describe('API Service', () => {
   })
 
   describe('balancesApi', () => {
-    const mockApi = mockedAxios.create()
-
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      jest.clearAllMocks()
     })
 
     describe('getBalanceOverview', () => {
@@ -483,10 +468,8 @@ describe('API Service', () => {
   })
 
   describe('axios interceptors', () => {
-    const mockApi = mockedAxios.create()
-
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      jest.clearAllMocks()
     })
 
     it('should add authorization header when token exists', () => {
