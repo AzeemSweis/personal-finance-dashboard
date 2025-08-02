@@ -126,7 +126,7 @@ async def delete_account(
             status_code=status.HTTP_404_NOT_FOUND, detail="Account not found"
         )
 
-    account.is_archived = True
+    setattr(account, "is_archived", True)
     await db.commit()
 
     return None

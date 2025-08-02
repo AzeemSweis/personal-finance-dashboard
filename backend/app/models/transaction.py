@@ -1,16 +1,7 @@
 import enum
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    Date,
-    Enum,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-)
+from sqlalchemy import (Boolean, Column, Date, Enum, Float, ForeignKey,
+                        Integer, String, Text)
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -52,7 +43,9 @@ class Transaction(Base):
     date = Column(Date, nullable=False)
     description = Column(String(500), nullable=False)
     merchant_name = Column(String(255), nullable=True)
-    category = Column(Enum(TransactionCategory), nullable=True)
+    category: "Column[TransactionCategory]" = Column(
+        Enum(TransactionCategory), nullable=True
+    )
     subcategory = Column(String(100), nullable=True)
     is_pending = Column(Boolean, default=False, nullable=False)
     is_recurring = Column(Boolean, default=False, nullable=False)

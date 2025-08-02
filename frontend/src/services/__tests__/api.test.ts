@@ -5,6 +5,18 @@ import { authApi, accountsApi, transactionsApi, balancesApi, formatCurrency, for
 jest.mock('axios')
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
+// Create a properly typed mock API instance
+const createMockApi = () => ({
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+  interceptors: {
+    request: { use: jest.fn() },
+    response: { use: jest.fn() }
+  }
+})
+
 describe('API Service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -26,10 +38,10 @@ describe('API Service', () => {
   })
 
   describe('authApi', () => {
-    const mockApi = mockedAxios.create()
+    const mockApi = createMockApi()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      mockedAxios.create.mockReturnValue(mockApi as any)
     })
 
     describe('register', () => {
@@ -124,10 +136,10 @@ describe('API Service', () => {
   })
 
   describe('accountsApi', () => {
-    const mockApi = mockedAxios.create()
+    const mockApi = createMockApi()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      mockedAxios.create.mockReturnValue(mockApi as any)
     })
 
     describe('getAccounts', () => {
@@ -243,10 +255,10 @@ describe('API Service', () => {
   })
 
   describe('transactionsApi', () => {
-    const mockApi = mockedAxios.create()
+    const mockApi = createMockApi()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      mockedAxios.create.mockReturnValue(mockApi as any)
     })
 
     describe('getTransactions', () => {
@@ -350,10 +362,10 @@ describe('API Service', () => {
   })
 
   describe('balancesApi', () => {
-    const mockApi = mockedAxios.create()
+    const mockApi = createMockApi()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      mockedAxios.create.mockReturnValue(mockApi as any)
     })
 
     describe('getBalanceOverview', () => {
@@ -470,10 +482,10 @@ describe('API Service', () => {
   })
 
   describe('axios interceptors', () => {
-    const mockApi = mockedAxios.create()
+    const mockApi = createMockApi()
 
     beforeEach(() => {
-      mockedAxios.create.mockReturnValue(mockApi)
+      mockedAxios.create.mockReturnValue(mockApi as any)
     })
 
     it('should add authorization header when token exists', () => {

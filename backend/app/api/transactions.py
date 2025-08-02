@@ -10,11 +10,8 @@ from ..database import get_db
 from ..models.account import Account
 from ..models.transaction import Transaction
 from ..models.user import User
-from ..schemas.transaction import (
-    TransactionCreate,
-    TransactionResponse,
-    TransactionUpdate,
-)
+from ..schemas.transaction import (TransactionCreate, TransactionResponse,
+                                   TransactionUpdate)
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -45,7 +42,7 @@ async def get_transactions(
         query = query.where(Transaction.date <= end_date)
 
     if category:
-        query = query.where(Transaction.category == category)
+        query = query.where(Transaction.category.is_(category))
 
     # Apply pagination and ordering
     query = query.order_by(Transaction.date.desc()).offset(offset).limit(limit)

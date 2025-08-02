@@ -1,6 +1,7 @@
 import enum
 
-from sqlalchemy import Boolean, Column, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (Boolean, Column, Enum, Float, ForeignKey, Integer,
+                        String, Text)
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -30,7 +31,7 @@ class Account(Base):
         String(255), unique=True, nullable=True
     )  # Plaid's account ID
     name = Column(String(255), nullable=False)
-    type = Column(Enum(AccountType), nullable=False)
+    type: "Column[AccountType]" = Column(Enum(AccountType), nullable=False)
     institution_name = Column(String(255), nullable=True)
     account_number = Column(String(50), nullable=True)  # Masked account number
     current_balance = Column(Float, default=0.0, nullable=False)

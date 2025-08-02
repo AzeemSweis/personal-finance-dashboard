@@ -1,6 +1,7 @@
 import enum
 
-from sqlalchemy import Boolean, Column, Date, Enum, Float, Integer, String, Text
+from sqlalchemy import (Boolean, Column, Date, Enum, Float, Integer, String,
+                        Text)
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -29,7 +30,7 @@ class Investment(Base):
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String(20), nullable=False, index=True)
     name = Column(String(255), nullable=False)
-    type = Column(Enum(InvestmentType), nullable=False)
+    type: "Column[InvestmentType]" = Column(Enum(InvestmentType), nullable=False)
     exchange = Column(String(20), nullable=True)
     currency = Column(String(3), default="USD", nullable=False)
     current_price = Column(Float, nullable=True)

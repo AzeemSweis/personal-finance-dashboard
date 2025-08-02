@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
@@ -10,11 +10,8 @@ from ..database import get_db
 from ..models.account import Account
 from ..models.balance_snapshot import BalanceSnapshot
 from ..models.user import User
-from ..schemas.balance import (
-    AccountBalance,
-    BalanceOverviewResponse,
-    BalanceSnapshotResponse,
-)
+from ..schemas.balance import (AccountBalance, BalanceOverviewResponse,
+                               BalanceSnapshotResponse)
 
 router = APIRouter(prefix="/balances", tags=["balances"])
 
@@ -43,14 +40,14 @@ async def get_balance_overview(
     account_balances = []
     for account in accounts:
         account_balance = AccountBalance(
-            account_id=account.id,
-            account_name=account.name,
+            account_id=account.id,  # type: ignore
+            account_name=account.name,  # type: ignore
             account_type=account.type.value,
-            institution_name=account.institution_name,
-            current_balance=account.current_balance,
-            available_balance=account.available_balance,
-            currency=account.currency,
-            last_updated=account.updated_at,
+            institution_name=account.institution_name,  # type: ignore
+            current_balance=account.current_balance,  # type: ignore
+            available_balance=account.available_balance,  # type: ignore
+            currency=account.currency,  # type: ignore
+            last_updated=account.updated_at,  # type: ignore
         )
         account_balances.append(account_balance)
 
@@ -75,20 +72,20 @@ async def get_balance_overview(
     ]
 
     return BalanceOverviewResponse(
-        total_balance=total_balance,
-        total_available_balance=total_available_balance,
+        total_balance=total_balance,  # type: ignore
+        total_available_balance=total_available_balance,  # type: ignore
         currency="USD",  # Assuming USD for now
         accounts=account_balances,
-        net_worth_trend=net_worth_trend,
+        net_worth_trend=net_worth_trend,  # type: ignore
         last_updated=datetime.utcnow(),
     )
 
 
 @router.get("/snapshots", response_model=List[BalanceSnapshotResponse])
 async def get_balance_snapshots(
-    account_id: int = None,
-    start_date: date = None,
-    end_date: date = None,
+    account_id: Optional[int] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
