@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.jwt import get_current_active_user
@@ -9,9 +9,14 @@ from ..database import get_db
 from ..models.investment import Investment
 from ..models.portfolio import Portfolio, PortfolioItem
 from ..models.user import User
-from ..schemas.portfolio import (PortfolioCreate, PortfolioItemCreate,
-                                 PortfolioItemResponse, PortfolioItemUpdate,
-                                 PortfolioResponse, PortfolioUpdate)
+from ..schemas.portfolio import (
+    PortfolioCreate,
+    PortfolioItemCreate,
+    PortfolioItemResponse,
+    PortfolioItemUpdate,
+    PortfolioResponse,
+    PortfolioUpdate,
+)
 
 router = APIRouter(prefix="/portfolios", tags=["portfolios"])
 
@@ -24,7 +29,7 @@ async def get_portfolios(
     """Get all portfolios for the current user"""
     result = await db.execute(
         select(Portfolio).where(
-            Portfolio.user_id == current_user.id, Portfolio.is_active == True
+            Portfolio.user_id == current_user.id, Portfolio.is_active.is_(True)
         )
     )
     portfolios = result.scalars().all()
@@ -64,7 +69,7 @@ async def create_portfolio(
     if portfolio_data.is_default:
         await db.execute(
             select(Portfolio)
-            .where(Portfolio.user_id == current_user.id, Portfolio.is_default == True)
+            .where(Portfolio.user_id == current_user.id, Portfolio.is_default.is_(True))
             .update({Portfolio.is_default: False})
         )
 
@@ -111,7 +116,7 @@ async def update_portfolio(
             .where(
                 Portfolio.user_id == current_user.id,
                 Portfolio.id != portfolio_id,
-                Portfolio.is_default == True,
+                Portfolio.is_default.is_(True),
             )
             .update({Portfolio.is_default: False})
         )

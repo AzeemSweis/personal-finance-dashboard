@@ -2,7 +2,7 @@ from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.jwt import get_current_active_user
@@ -10,8 +10,11 @@ from ..database import get_db
 from ..models.account import Account
 from ..models.transaction import Transaction
 from ..models.user import User
-from ..schemas.transaction import (TransactionCreate, TransactionResponse,
-                                   TransactionUpdate)
+from ..schemas.transaction import (
+    TransactionCreate,
+    TransactionResponse,
+    TransactionUpdate,
+)
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 

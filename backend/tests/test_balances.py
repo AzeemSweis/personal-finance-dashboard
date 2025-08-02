@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-import pytest
+
 from fastapi import status
 
 

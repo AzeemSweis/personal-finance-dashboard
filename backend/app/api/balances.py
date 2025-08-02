@@ -4,15 +4,18 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+
 
 from ..auth.jwt import get_current_active_user
 from ..database import get_db
 from ..models.account import Account
 from ..models.balance_snapshot import BalanceSnapshot
 from ..models.user import User
-from ..schemas.balance import (AccountBalance, BalanceOverviewResponse,
-                               BalanceSnapshotResponse)
+from ..schemas.balance import (
+    AccountBalance,
+    BalanceOverviewResponse,
+    BalanceSnapshotResponse,
+)
 
 router = APIRouter(prefix="/balances", tags=["balances"])
 
@@ -26,7 +29,7 @@ async def get_balance_overview(
     # Get all active accounts for the user
     result = await db.execute(
         select(Account).where(
-            Account.user_id == current_user.id, Account.is_archived == False
+            Account.user_id == current_user.id, Account.is_archived.is_(False)
         )
     )
     accounts = result.scalars().all()

@@ -1,8 +1,4 @@
-import pytest
 from fastapi import status
-from sqlalchemy import select
-
-from app.models.account import Account
 
 
 class TestAccountsEndpoints:

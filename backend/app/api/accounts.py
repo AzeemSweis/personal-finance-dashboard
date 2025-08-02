@@ -21,7 +21,7 @@ async def get_accounts(
     """Get all accounts for the current user"""
     result = await db.execute(
         select(Account).where(
-            Account.user_id == current_user.id, Account.is_archived == False
+            Account.user_id == current_user.id, Account.is_archived.is_(False)
         )
     )
     accounts = result.scalars().all()
