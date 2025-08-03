@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useAuthStore } from '../authStore'
+import { useAuthStore, initializeAuth } from '../authStore'
 import { authApi } from '../../services/api'
 
 // Mock the API service
@@ -335,5 +335,107 @@ describe('useAuthStore', () => {
       expect(useAuthStore.getState().token).toBe('mock-token')
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
     })
+  })
+})
+
+describe('initializeAuth', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    localStorage.clear()
+    // Reset store state
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+    })
+  })
+
+  it('should initialize auth state when valid token and user exist', () => {
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      username: 'testuser',
+      first_name: 'Test',
+      last_name: 'User',
+      is_active: true,
+      is_verified: true,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    }
+
+    // Mock localStorage methods for this specific test
+    const originalGetItem = localStorage.getItem
+    localStorage.getItem = jest.fn((key) => {
+      if (key === 'access_token') return 'test-token'
+      if (key === 'user') return JSON.stringify(mockUser)
+      return originalGetItem.call(localStorage, key)
+    })
+
+    initializeAuth()
+
+    const { result } = renderHook(() => useAuthStore())
+
+    expect(result.current.isAuthenticated).toBe(true)
+    expect(result.current.token).toBe('test-token')
+    expect(result.current.user).toEqual(mockUser)
+    
+    // Restore original method
+    localStorage.getItem = originalGetItem
+  })
+
+  it('should not initialize auth state when no token exists', () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
+
+    initializeAuth()
+
+    const { result } = renderHook(() => useAuthStore())
+
+    expect(result.current.isAuthenticated).toBe(false)
+    expect(result.current.token).toBeNull()
+    expect(result.current.user).toBeNull()
+  })
+
+  it('should not initialize auth state when token exists but no user', () => {
+    localStorage.setItem('access_token', 'test-token')
+    localStorage.removeItem('user')
+
+    initializeAuth()
+
+    const { result } = renderHook(() => useAuthStore())
+
+    expect(result.current.isAuthenticated).toBe(false)
+    expect(result.current.token).toBeNull()
+    expect(result.current.user).toBeNull()
+  })
+
+  it('should clear invalid stored data when JSON parsing fails', () => {
+    // Mock localStorage methods for this specific test
+    const originalGetItem = localStorage.getItem
+    const originalRemoveItem = localStorage.removeItem
+    
+    localStorage.getItem = jest.fn((key) => {
+      if (key === 'access_token') return 'test-token'
+      if (key === 'user') return 'invalid-json'
+      return originalGetItem.call(localStorage, key)
+    })
+    
+    const removeItemSpy = jest.fn()
+    localStorage.removeItem = removeItemSpy
+
+    initializeAuth()
+
+    expect(removeItemSpy).toHaveBeenCalledWith('access_token')
+    expect(removeItemSpy).toHaveBeenCalledWith('user')
+
+    const { result } = renderHook(() => useAuthStore())
+
+    expect(result.current.isAuthenticated).toBe(false)
+    expect(result.current.token).toBeNull()
+    expect(result.current.user).toBeNull()
+    
+    // Restore original methods
+    localStorage.getItem = originalGetItem
+    localStorage.removeItem = originalRemoveItem
   })
 }) 
