@@ -18,7 +18,9 @@ class TestAccountsEndpoints:
         assert len(data) == 0
 
     @pytest.mark.asyncio
-    async def test_create_account_success(self, authenticated_client, sample_account_data):
+    async def test_create_account_success(
+        self, authenticated_client, sample_account_data
+    ):
         """Test successful account creation."""
         client, user = authenticated_client
 
@@ -90,7 +92,9 @@ class TestAccountsEndpoints:
         assert account["user_id"] == user.id
 
     @pytest.mark.asyncio
-    async def test_get_account_by_id_success(self, authenticated_client, sample_account_data):
+    async def test_get_account_by_id_success(
+        self, authenticated_client, sample_account_data
+    ):
         """Test getting a specific account by ID."""
         client, user = authenticated_client
 
@@ -160,7 +164,9 @@ class TestAccountsEndpoints:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
-    async def test_update_account_success(self, authenticated_client, sample_account_data):
+    async def test_update_account_success(
+        self, authenticated_client, sample_account_data
+    ):
         """Test successful account update."""
         client, user = authenticated_client
 
@@ -209,7 +215,9 @@ class TestAccountsEndpoints:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_delete_account_success(self, authenticated_client, sample_account_data):
+    async def test_delete_account_success(
+        self, authenticated_client, sample_account_data
+    ):
         """Test successful account deletion (soft delete)."""
         client, user = authenticated_client
 

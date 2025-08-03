@@ -62,14 +62,14 @@ def client() -> Generator:
     """Create a test client."""
     # Override the database initialization during startup
     original_lifespan = app.router.lifespan_context
-    
+
     @asynccontextmanager
     async def test_lifespan(app):
         # Skip database initialization for tests
         yield
-    
+
     app.router.lifespan_context = test_lifespan
-    
+
     try:
         with TestClient(app) as test_client:
             yield test_client
@@ -80,22 +80,23 @@ def client() -> Generator:
 @pytest_asyncio.fixture
 async def async_client(db_session: AsyncSession) -> AsyncGenerator:
     """Create a test client with async database session."""
+
     async def override_get_db():
         yield db_session
 
     # Override the get_db dependency
     app.dependency_overrides[get_db] = override_get_db
-    
+
     # Override the database initialization during startup
     original_lifespan = app.router.lifespan_context
-    
+
     @asynccontextmanager
     async def test_lifespan(app):
         # Skip database initialization for tests
         yield
-    
+
     app.router.lifespan_context = test_lifespan
-    
+
     try:
         with TestClient(app) as test_client:
             yield test_client
