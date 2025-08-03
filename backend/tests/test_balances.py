@@ -120,7 +120,7 @@ class TestBalancesEndpoints:
     def test_get_balance_overview_unauthorized(self, client):
         """Test getting balance overview without authentication."""
         response = client.get("/balances/overview")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_balance_snapshots_empty(self, authenticated_client):
         """Test getting balance snapshots when user has no snapshots."""
@@ -177,7 +177,7 @@ class TestBalancesEndpoints:
     def test_get_account_balance_snapshots_unauthorized(self, client):
         """Test getting account balance snapshots without authentication."""
         response = client.get("/balances/snapshots/1")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_account_balance_snapshots_wrong_user(
         self, authenticated_client, sample_account_data, db_session

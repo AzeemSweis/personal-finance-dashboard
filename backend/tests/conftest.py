@@ -1,7 +1,9 @@
 import asyncio
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Generator
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -38,7 +40,7 @@ def event_loop() -> Generator:
     loop.close()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def setup_database():
     """Set up test database and create tables."""
     async with test_engine.begin() as conn:
@@ -48,7 +50,7 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Create a test database session."""
     async with TestingSessionLocal() as session:
@@ -56,16 +58,50 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-def client(db_session: AsyncSession) -> Generator:
-    """Create a test client with database session."""
+def client() -> Generator:
+    """Create a test client."""
+    # Override the database initialization during startup
+    original_lifespan = app.router.lifespan_context
+    
+    @asynccontextmanager
+    async def test_lifespan(app):
+        # Skip database initialization for tests
+        yield
+    
+    app.router.lifespan_context = test_lifespan
+    
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.router.lifespan_context = original_lifespan
 
-    def override_get_db():
+
+@pytest_asyncio.fixture
+async def async_client(db_session: AsyncSession) -> AsyncGenerator:
+    """Create a test client with async database session."""
+    async def override_get_db():
         yield db_session
 
+    # Override the get_db dependency
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
+    
+    # Override the database initialization during startup
+    original_lifespan = app.router.lifespan_context
+    
+    @asynccontextmanager
+    async def test_lifespan(app):
+        # Skip database initialization for tests
+        yield
+    
+    app.router.lifespan_context = test_lifespan
+    
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
+        app.router.lifespan_context = original_lifespan
 
 
 @pytest.fixture
@@ -87,8 +123,8 @@ def auth_headers(test_user):
     return {"Authorization": f"Bearer {token}"}
 
 
-@pytest.fixture
-async def authenticated_client(client, test_user, db_session):
+@pytest_asyncio.fixture
+async def authenticated_client(async_client, test_user, db_session):
     """Create a test client with an authenticated user."""
     # First, create the user in the database
     from app.auth.password import get_password_hash
@@ -111,9 +147,9 @@ async def authenticated_client(client, test_user, db_session):
 
     # Create auth headers
     token = create_access_token(data={"sub": test_user["email"]})
-    client.headers.update({"Authorization": f"Bearer {token}"})
+    async_client.headers.update({"Authorization": f"Bearer {token}"})
 
-    return client, db_user
+    return async_client, db_user
 
 
 @pytest.fixture
