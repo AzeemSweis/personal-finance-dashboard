@@ -1,6 +1,18 @@
+// Create mock API instance type
+interface MockApi {
+  get: jest.MockedFunction<any>;
+  post: jest.MockedFunction<any>;
+  put: jest.MockedFunction<any>;
+  delete: jest.MockedFunction<any>;
+  interceptors: {
+    request: { use: jest.MockedFunction<any> };
+    response: { use: jest.MockedFunction<any> };
+  };
+}
+
 // Mock axios before importing
 jest.mock('axios', () => {
-  const mockApi = {
+  const mockApi: MockApi = {
     get: jest.fn(),
     post: jest.fn(),
     put: jest.fn(),
@@ -26,7 +38,7 @@ import { authApi, accountsApi, transactionsApi, balancesApi, formatCurrency, for
 
 // Get the mocked axios and its created instance
 const mockedAxios = axios as jest.Mocked<typeof axios>
-const mockApi = mockedAxios.create()
+const mockApi = mockedAxios.create() as MockApi
 
 describe('API Service', () => {
   beforeEach(() => {
